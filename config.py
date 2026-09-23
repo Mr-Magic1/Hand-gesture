@@ -7,8 +7,10 @@ Edit this file to remap gestures without touching main.py logic.
 CAM_WIDTH = 640
 CAM_HEIGHT = 480
 
-FRAME_REDUCTION = 200     # inner "active" rectangle margin (px) for cursor mapping
-SMOOTHENING = 12          # higher = smoother but more laggy cursor movement
+TRACKING_MODE = "HAND"    # Set to "HAND" or "EYE" to switch between hand and eye control.
+
+FRAME_REDUCTION = 130     # inner "active" rectangle margin (px) for cursor mapping
+SMOOTHENING = 20          # higher = smoother but more laggy cursor movement
 
 # --- GESTURE SENSITIVITY TUNING ---
 PINCH_THRESHOLD = 40      # px distance between thumb/finger tip to count as a pinch. Increase if pinches aren't registering.

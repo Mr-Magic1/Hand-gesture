@@ -90,9 +90,7 @@ class MLGestureRecognizer(GestureRecognizer):
         elif fingers[1:] == [1, 0, 0, 0]:
             raw_pred = "POINT"
             
-        # 5. OPEN PALM FALLBACK (geometric) - Extremely rigid, no need for ML
-        elif sum(fingers) == 5:
-            raw_pred = "OPEN_PALM"
+        # (Removed OPEN_PALM geometric fallback so ML can handle it smoothly)
             
         # 6. ML PREDICTION
         elif self.rf_model is not None:

@@ -10,6 +10,7 @@ import cv2
 from hand_tracker import HandTracker
 from ml_gesture_recognizer import MLGestureRecognizer
 from controller import PCController
+from eye_tracker import EyeTracker
 import config
 
 
@@ -20,6 +21,7 @@ def main():
 
     tracker = HandTracker(max_hands=1)
     recognizer = MLGestureRecognizer()
+    eye_tracker = EyeTracker()
     controller = PCController(
         smoothening=config.SMOOTHENING,
         frame_reduction=config.FRAME_REDUCTION,
@@ -40,6 +42,9 @@ def main():
 
     # Three-finger swipe state (waving)
     # (Removed dynamic waving, keeping only static alt+tab)
+
+    # Eye tracking state
+    last_blink_time = 0
 
     # Wake-on-Motion state
     prev_gray = None
@@ -77,7 +82,7 @@ def main():
         
         if motion_detected:
             is_sleeping = False
-        elif now - last_hand_time > 2.0:
+        elif now - last_hand_time > 2.0 and getattr(config, "TRACKING_MODE", "HAND") == "HAND":
             is_sleeping = True
             
         if is_sleeping:
@@ -89,7 +94,35 @@ def main():
                 break
             continue
         # ----------------------------
-
+        
+        # --- Eye Tracking Mode ---
+        mode = getattr(config, "TRACKING_MODE", "HAND")
+        if mode == "EYE":
+            results = eye_tracker.find_face_and_eyes(frame)
+            frame = eye_tracker.draw_eye_markers(frame, results)
+            
+            ratios = eye_tracker.get_gaze_ratio(frame, results)
+            if ratios is not None:
+                x_ratio, y_ratio = ratios
+                # Map ratios back to camera coordinates so controller can map them to screen
+                cam_x = x_ratio * config.CAM_WIDTH
+                cam_y = y_ratio * config.CAM_HEIGHT
+                controller.move_mouse(cam_x, cam_y)
+                
+                if eye_tracker.is_blinking(frame, results):
+                    if now - last_blink_time > 0.5:
+                        controller.left_click()
+                        print("Blink -> Left Click")
+                        last_blink_time = now
+                        
+            cv2.putText(frame, "EYE TRACKING MODE", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            cv2.imshow("Hand Gesture PC Control", frame)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                break
+            continue
+        # -------------------------
+        # -------------------------
         frame = tracker.find_hands(frame)
         landmark_list = tracker.get_landmark_list(frame)
         handedness = tracker.get_handedness() or "Right"
@@ -98,13 +131,13 @@ def main():
         fingers = [0, 0, 0, 0, 0]
         if landmark_list:
             last_hand_time = now
-            gesture, fingers = recognizer.classify(
-                landmark_list, 
-                handedness, 
-                config.PINCH_THRESHOLD,
-                getattr(config, "THUMB_SENSITIVITY", 10),
-                getattr(config, "FINGER_SENSITIVITY", 0)
-            )
+        gesture, fingers = recognizer.classify(
+            landmark_list, 
+            handedness, 
+            config.PINCH_THRESHOLD,
+            getattr(config, "THUMB_SENSITIVITY", 10),
+            getattr(config, "FINGER_SENSITIVITY", 0)
+        )
 
         if running and landmark_list:
             if gesture == "POINT":
