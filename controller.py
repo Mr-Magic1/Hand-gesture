@@ -116,6 +116,20 @@ class PCController:
             pyautogui.hotkey("ctrl", "shift", "tab")
             self.last_action_time = now
 
+    def browser_back(self):
+        """Go back in browser history (Alt+Left)."""
+        now = time.time()
+        if now - self.last_action_time > 0.8:
+            pyautogui.hotkey("alt", "left")
+            self.last_action_time = now
+
+    def browser_forward(self):
+        """Go forward in browser history (Alt+Right)."""
+        now = time.time()
+        if now - self.last_action_time > 0.8:
+            pyautogui.hotkey("alt", "right")
+            self.last_action_time = now
+
     # ---------- Brightness ----------
     def brightness_up(self, step=10):
         if not BRIGHTNESS_AVAILABLE:

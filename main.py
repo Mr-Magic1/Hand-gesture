@@ -38,6 +38,15 @@ def main():
     two_finger_history = []
     last_tab_swipe_time = 0
 
+    # Three-finger swipe state (waving)
+    three_finger_history = []
+    last_three_swipe_time = 0
+
+    # Wake-on-Motion state
+    prev_gray = None
+    last_hand_time = time.time()
+    is_sleeping = False
+
     prev_frame_time = 0
     running = True
 
@@ -51,6 +60,37 @@ def main():
             break
 
         frame = cv2.flip(frame, 1)  # mirror for natural interaction
+        
+        # --- Wake-on-Motion Logic ---
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        
+        motion_detected = False
+        if prev_gray is not None:
+            diff = cv2.absdiff(prev_gray, gray)
+            thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)[1]
+            motion_pixels = cv2.countNonZero(thresh)
+            if motion_pixels > 500:  # arbitrary threshold for movement
+                motion_detected = True
+        prev_gray = gray
+        
+        now = time.time()
+        
+        if motion_detected:
+            is_sleeping = False
+        elif now - last_hand_time > 2.0:
+            is_sleeping = True
+            
+        if is_sleeping:
+            cv2.putText(frame, "SLEEPING (Move to wake)", (10, 80), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 0, 255), 2)
+            cv2.imshow("Hand Gesture PC Control", frame)
+            
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                break
+            continue
+        # ----------------------------
+
         frame = tracker.find_hands(frame)
         landmark_list = tracker.get_landmark_list(frame)
         handedness = tracker.get_handedness() or "Right"
@@ -58,6 +98,7 @@ def main():
         gesture = "NONE"
         fingers = [0, 0, 0, 0, 0]
         if landmark_list:
+            last_hand_time = now
             gesture, fingers = recognizer.classify(
                 landmark_list, 
                 handedness, 
@@ -123,7 +164,37 @@ def main():
                 open_palm_start, palm_history = None, []
 
             elif gesture == "THREE_FINGERS":
-                controller.switch_window()
+                x, y = landmark_list[9][1], landmark_list[9][2]
+                
+                # Track position history for swipe detection
+                three_finger_history.append((now, x, y))
+                three_finger_history = [
+                    p for p in three_finger_history
+                    if now - p[0] < config.SWIPE_TIME_WINDOW
+                ]
+                
+                swiped = False
+                if len(three_finger_history) >= 2 and now - last_three_swipe_time > 0.8:
+                    dx = three_finger_history[-1][1] - three_finger_history[0][1]
+                    hand_size = recognizer.distance(landmark_list, 0, 9)
+                    scaled_swipe = config.SWIPE_PIXEL_THRESHOLD * (max(hand_size, 1) / 100.0)
+                    
+                    if abs(dx) > scaled_swipe:
+                        if dx > 0:
+                            controller.browser_forward()
+                            print("Wave RIGHT -> Browser Forward")
+                        else:
+                            controller.browser_back()
+                            print("Wave LEFT -> Browser Back")
+                        last_three_swipe_time = now
+                        three_finger_history = []
+                        swiped = True
+                
+                # If they didn't swipe, and held relatively still, trigger Alt+Tab
+                if not swiped and len(three_finger_history) > 1:
+                    dx = three_finger_history[-1][1] - three_finger_history[0][1]
+                    if abs(dx) < 20: # Hand is mostly still
+                        controller.switch_window()
                 prev_scroll_y = None
                 two_finger_history = []
 

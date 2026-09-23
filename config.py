@@ -28,11 +28,12 @@ GESTURE_ACTIONS = {
     "PINCH_CLICK":        "Left click (thumb + index pinch)",
     "PINCH_RIGHT_CLICK":  "Right click (thumb + middle pinch)",
     "TWO_FINGERS":        "Scroll UP/DOWN | Swipe LEFT=Prev Tab | Swipe RIGHT=Next Tab",
-    "THREE_FINGERS":      "Switch window (Alt+Tab)",
-    "OPEN_PALM":          "Hold still -> Show desktop | Swipe left/right -> Switch virtual desktop",
+    "THREE_FINGERS":      "Hold=Switch window (Alt+Tab) | Wave LEFT=Browser Back | Wave RIGHT=Browser Forward",
+    "OPEN_PALM":          "Hold 1s=Show desktop | Swipe left/right=Switch virtual desktop",
     "FIST":               "Idle / no action (safe pose)",
     "THUMBS_UP":          "Volume up",
     "PINKY":              "Volume down",
     "GUN":                "Mute / unmute audio",
     "ROCK":               "Play / pause media",
+    "NONE":               "Idle for 2 seconds -> Enters Wake-on-Motion Sleep Mode"
 }
