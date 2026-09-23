@@ -156,6 +156,18 @@ class PCController:
             pyautogui.hotkey("alt", "tab")
             self.last_action_time = now
 
+    def close_window(self):
+        now = time.time()
+        if now - self.last_action_time > self.action_cooldown:
+            pyautogui.hotkey("alt", "f4")
+            self.last_action_time = now
+            
+    def maximize_window(self):
+        now = time.time()
+        if now - self.last_action_time > self.action_cooldown:
+            pyautogui.hotkey("win", "up")
+            self.last_action_time = now
+
     def show_desktop(self):
         now = time.time()
         if now - self.last_action_time > self.action_cooldown:

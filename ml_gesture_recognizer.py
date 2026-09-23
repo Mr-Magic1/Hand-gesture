@@ -86,8 +86,8 @@ class MLGestureRecognizer(GestureRecognizer):
         elif fingers == [0, 0, 0, 0, 1]:
             raw_pred = "PINKY"
             
-        # 4. POINT FALLBACK (geometric) - Extremely rigid, no need for ML
-        elif fingers == [0, 1, 0, 0, 0]:
+        # 4. POINT FALLBACK (geometric) - Extremely rigid for stability, but thumb is ignored
+        elif fingers[1:] == [1, 0, 0, 0]:
             raw_pred = "POINT"
             
         # 5. OPEN PALM FALLBACK (geometric) - Extremely rigid, no need for ML

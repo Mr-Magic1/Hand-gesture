@@ -7,8 +7,8 @@ Edit this file to remap gestures without touching main.py logic.
 CAM_WIDTH = 640
 CAM_HEIGHT = 480
 
-FRAME_REDUCTION = 100     # inner "active" rectangle margin (px) for cursor mapping
-SMOOTHENING = 6           # higher = smoother but more laggy cursor movement
+FRAME_REDUCTION = 200     # inner "active" rectangle margin (px) for cursor mapping
+SMOOTHENING = 12          # higher = smoother but more laggy cursor movement
 
 # --- GESTURE SENSITIVITY TUNING ---
 PINCH_THRESHOLD = 40      # px distance between thumb/finger tip to count as a pinch. Increase if pinches aren't registering.
@@ -28,12 +28,16 @@ GESTURE_ACTIONS = {
     "PINCH_CLICK":        "Left click (thumb + index pinch)",
     "PINCH_RIGHT_CLICK":  "Right click (thumb + middle pinch)",
     "TWO_FINGERS":        "Scroll UP/DOWN | Swipe LEFT=Prev Tab | Swipe RIGHT=Next Tab",
-    "THREE_FINGERS":      "Hold=Switch window (Alt+Tab) | Wave LEFT=Browser Back | Wave RIGHT=Browser Forward",
+    "THREE_FINGERS":      "Switch window (Alt+Tab)",
     "OPEN_PALM":          "Hold 1s=Show desktop | Swipe left/right=Switch virtual desktop",
     "FIST":               "Idle / no action (safe pose)",
     "THUMBS_UP":          "Volume up",
     "PINKY":              "Volume down",
     "GUN":                "Mute / unmute audio",
     "ROCK":               "Play / pause media",
+    "DISLIKE":            "Go back in browser (Browser Back)",
+    "CALL":               "Go forward in browser (Browser Forward)",
+    "FOUR_FINGERS":       "Maximize window (Win+Up)",
+    "STOP":               "Close window (Alt+F4)",
     "NONE":               "Idle for 2 seconds -> Enters Wake-on-Motion Sleep Mode"
 }

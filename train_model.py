@@ -17,6 +17,10 @@ HAGRID_TO_OURS = {
     "like": "THUMBS_UP",
     "rock": "ROCK",
     "mute": "GUN",
+    "dislike": "DISLIKE",
+    "call": "CALL",
+    "four": "FOUR_FINGERS",
+    "stop": "STOP",
 }
 
 ANN_DIR = "ann_train_val"
