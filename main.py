@@ -6,6 +6,47 @@ every frame, and dispatches the recognized gesture to PCController.
 
 import time
 import cv2
+import pyautogui
+
+# --- Drag Overlay Logic ---
+is_dragging = False
+drag_start_mouse = (0, 0)
+drag_start_win = (0, 0)
+
+def mouse_callback(event, x, y, flags, param):
+    global is_dragging, drag_start_mouse, drag_start_win
+    if event == cv2.EVENT_LBUTTONDOWN:
+        is_dragging = True
+        drag_start_mouse = pyautogui.position()
+        try:
+            rect = cv2.getWindowImageRect("Hand Gesture PC Control")
+            drag_start_win = (rect[0] - 8, rect[1] - 31)
+        except Exception:
+            drag_start_win = (0, 0)
+    elif event == cv2.EVENT_MOUSEMOVE:
+        if is_dragging:
+            current_mouse = pyautogui.position()
+            dx = current_mouse[0] - drag_start_mouse[0]
+            dy = current_mouse[1] - drag_start_mouse[1]
+            cv2.moveWindow("Hand Gesture PC Control", drag_start_win[0] + dx, drag_start_win[1] + dy)
+    elif event == cv2.EVENT_LBUTTONUP:
+        is_dragging = False
+
+def handle_keys(key, current_w, current_h, running):
+    if key == ord('q'):
+        return False, current_w, current_h, running
+    elif key == ord('p'):
+        running = not running
+    elif key == ord('+') or key == ord('='):
+        current_w = int(current_w * 1.1)
+        current_h = int(current_h * 1.1)
+        cv2.resizeWindow("Hand Gesture PC Control", current_w, current_h)
+    elif key == ord('-'):
+        current_w = max(50, int(current_w * 0.9))
+        current_h = max(50, int(current_h * 0.9))
+        cv2.resizeWindow("Hand Gesture PC Control", current_w, current_h)
+    return True, current_w, current_h, running
+# --------------------------
 
 from hand_tracker import HandTracker
 from ml_gesture_recognizer import MLGestureRecognizer
@@ -56,6 +97,17 @@ def main():
 
     print("Hand Gesture PC Control started.")
     print("Press 'q' to quit, 'p' to pause/resume.")
+    print("Press '+' or '-' to resize the window.")
+    print("Drag inside the window to move it.")
+
+    # Set up the camera window as a topmost overlay and decrease its size
+    cv2.namedWindow("Hand Gesture PC Control", cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty("Hand Gesture PC Control", cv2.WND_PROP_TOPMOST, 1)
+    
+    current_overlay_w = int(config.CAM_WIDTH * 0.3)
+    current_overlay_h = int(config.CAM_HEIGHT * 0.3)
+    cv2.resizeWindow("Hand Gesture PC Control", current_overlay_w, current_overlay_h)
+    cv2.setMouseCallback("Hand Gesture PC Control", mouse_callback)
 
     while True:
         success, frame = cap.read()
@@ -90,7 +142,8 @@ def main():
             cv2.imshow("Hand Gesture PC Control", frame)
             
             key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
+            keep_running, current_overlay_w, current_overlay_h, running = handle_keys(key, current_overlay_w, current_overlay_h, running)
+            if not keep_running:
                 break
             continue
         # ----------------------------
@@ -118,7 +171,8 @@ def main():
             cv2.putText(frame, "EYE TRACKING MODE", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
             cv2.imshow("Hand Gesture PC Control", frame)
             key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
+            keep_running, current_overlay_w, current_overlay_h, running = handle_keys(key, current_overlay_w, current_overlay_h, running)
+            if not keep_running:
                 break
             continue
         # -------------------------
@@ -305,10 +359,9 @@ def main():
 
         cv2.imshow("Hand Gesture PC Control", frame)
         key = cv2.waitKey(1) & 0xFF
-        if key == ord("q"):
+        keep_running, current_overlay_w, current_overlay_h, running = handle_keys(key, current_overlay_w, current_overlay_h, running)
+        if not keep_running:
             break
-        elif key == ord("p"):
-            running = not running
 
     cap.release()
     cv2.destroyAllWindows()
